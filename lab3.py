@@ -50,9 +50,7 @@ def mlParams(X, labels, W=None):
     sigma = np.zeros((Nclasses,Ndims,Ndims))
 
     # TODO: fill in the code to compute mu and sigma!
-    # ==========================
     
-    # ==========================
 
     return mu, sigma
 
