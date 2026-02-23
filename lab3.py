@@ -1,19 +1,5 @@
-#!/usr/bin/python
-# coding: utf-8
-
 # # Lab 3: Bayes Classifier and Boosting
-
-# ## Jupyter notebooks
-# 
-# In this lab, you can use Jupyter <https://jupyter.org/> to get a nice layout of your code and plots in one document. However, you may also use Python as usual, without Jupyter.
-# 
-# If you have Python and pip, you can install Jupyter with `sudo pip install jupyter`. Otherwise you can follow the instruction on <http://jupyter.readthedocs.org/en/latest/install.html>.
-# 
-# And that is everything you need! Now use a terminal to go into the folder with the provided lab files. Then run `jupyter notebook` to start a session in that folder. Click `lab3.ipynb` in the browser window that appeared to start this very notebook. You should click on the cells in order and either press `ctrl+enter` or `run cell` in the toolbar above to evaluate all the expressions.
-
 # ## Import the libraries
-# 
-# In Jupyter, select the cell below and press `ctrl + enter` to import the needed libraries.
 # Check out `labfuns.py` if you are interested in the details.
 
 import numpy as np
@@ -24,9 +10,6 @@ import random
 
 
 # ## Bayes classifier functions to implement
-# 
-# The lab descriptions state what each function should do.
-
 
 # NOTE: you do not need to handle the W argument for this part!
 # in: labels - N vector of class labels
