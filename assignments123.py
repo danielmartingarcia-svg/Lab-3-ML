@@ -56,8 +56,9 @@ def mlParams(X, labels, W=None):
         x_centered = Xclass - mu[jdx,:]
         # Simplicity: feature dimensions are independent, so we only compute the diagonal of the covariance matrix
         # Diagonal covariance matrix: 
-        sigma[jdx,:,:] = np.diag(np.sum(x_centered**2,axis=0)/NptsClass)
-        # Unsimplified: sigma[jdx,:,:] = np.dot(x_centered.T, x_centered)/NptsClass
+        # sigma[jdx,:,:] = np.diag(np.sum(x_centered**2,axis=0)/NptsClass)
+        # Unsimplified: 
+        sigma[jdx,:,:] = np.dot(x_centered.T, x_centered)/NptsClass
 
     return mu, sigma
 
@@ -76,11 +77,15 @@ def classifyBayes(X, prior, mu, sigma):
     for jdx in range(Nclasses):
         x_centered = X - mu[jdx,:]
         
-        variances = np.diag(sigma[jdx,:,:]) # Ensure diagonal matrix
-        logDetSigma = np.sum(np.log(variances))
+        # variances = np.diag(sigma[jdx,:,:]) # Ensure diagonal matrix
+        # logDetSigma = np.sum(np.log(variances))
+        # Unsimplified:
+        logDetSigma = np.log(np.linalg.det(sigma[jdx,:,:]))
         logPrior = np.log(prior[jdx])
-        logProb[jdx,:] =-0.5*logDetSigma - 0.5*np.sum((x_centered**2)/variances,axis=1) + logPrior
-    
+        # logProb[jdx,:] =-0.5*logDetSigma - 0.5*np.sum((x_centered**2)/variances,axis=1) + logPrior
+        # Unsimplified and with dot product and transpose:
+        logProb[jdx,:] =-0.5*logDetSigma - 0.5*np.sum(np.dot(x_centered, np.linalg.inv(sigma[jdx,:,:]))*x_centered,axis=1) + logPrior
+
     # one possible way of finding max a-posteriori once
     # you have computed the log posterior
     h = np.argmax(logProb,axis=0)
