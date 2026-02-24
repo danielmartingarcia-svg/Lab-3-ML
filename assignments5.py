@@ -29,7 +29,7 @@ def computePrior(labels, W=None):
     return prior
 
 
-def mlParams(X, labels, W=None):
+def mlParams(X, labels, W):
     # in:      X - N x d matrix of N data points
     #     labels - N vector of class labels
     # out:    mu - C x d matrix of class means (mu[i] - class i mean)
@@ -50,13 +50,15 @@ def mlParams(X, labels, W=None):
         idx = labels==clas # true/false with the length of y
         classIdx = np.where(labels==clas)[0]
         Xclass = X[classIdx,:] # the data points of class clas
+        Wclass = W[classIdx] # the weights of the data points of class clas
         NptsClass = Xclass.shape[0] # number of data points in class
-        mu[jdx,:] = np.sum(Xclass,axis=0)/NptsClass
+        mu[jdx,:] = np.sum(Xclass*Wclass,axis=0)/np.sum(Wclass)
         x_centered = Xclass - mu[jdx,:]
         # Simplicity: feature dimensions are independent, so we only compute the diagonal of the covariance matrix
         # Diagonal covariance matrix: 
-        sigma[jdx,:,:] = np.diag(np.sum(x_centered**2,axis=0)/NptsClass)
-        # Unsimplified: sigma[jdx,:,:] = np.dot(x_centered.T, x_centered)/NptsClass
+        sigma[jdx,:,:] = np.diag(np.sum(x_centered**2*Wclass,axis=0)/np.sum(Wclass))
+        # Unsimplified: 
+        # sigma[jdx,:,:] = np.dot(x_centered.T, x_centered)/NptsClass
 
     return mu, sigma
 
@@ -74,12 +76,16 @@ def classifyBayes(X, prior, mu, sigma):
 
     for jdx in range(Nclasses):
         x_centered = X - mu[jdx,:]
-        
+        # Simplicity: feature dimensions are independent, so we only compute the diagonal of the covariance matrix
         variances = np.diag(sigma[jdx,:,:]) # Ensure diagonal matrix
         logDetSigma = np.sum(np.log(variances))
+        # Unsimplified:
+        # logDetSigma = np.log(np.linalg.det(sigma[jdx,:,:]))
         logPrior = np.log(prior[jdx])
         logProb[jdx,:] =-0.5*logDetSigma - 0.5*np.sum((x_centered**2)/variances,axis=1) + logPrior
-    
+        # Unsimplified and with dot product and transpose:
+        # logProb[jdx,:] =-0.5*logDetSigma - 0.5*np.sum(np.dot(x_centered, np.linalg.inv(sigma[jdx,:,:]))*x_centered,axis=1) + logPrior
+
     # one possible way of finding max a-posteriori once
     # you have computed the log posterior
     h = np.argmax(logProb,axis=0)
@@ -99,8 +105,12 @@ class BayesClassifier(object):
     def classify(self, X):
         return classifyBayes(X, self.prior, self.mu, self.sigma)
 
+# Get X and labels 
 X, labels = genBlobs(centers=5)
-mu, sigma = mlParams(X,labels)
+# Initialize weights to uniform weight vector with w=1/N
+W = np.ones((X.shape[0], 1)) / X.shape[0]
+# Compute mu and sigma
+mu, sigma = mlParams(X,labels,W)
 plotGaussian(X,labels,mu,sigma)
 
 # Create an instance of your classifier
@@ -118,15 +128,15 @@ testClassifier(bc, dataset='vowel')
 plotBoundary(bc, dataset='iris')
 
 # Boosting functions to implement
-# The lab descriptions state what each function should do.
 
-# in: base_classifier - a classifier of the type that we will boost, e.g. BayesClassifier
-#                   X - N x d matrix of N data points
-#              labels - N vector of class labels
-#                   T - number of boosting iterations
-# out:    classifiers - (maximum) length T Python list of trained classifiers
-#              alphas - (maximum) length T Python list of vote weights
 def trainBoost(base_classifier, X, labels, T=10):
+    # in: base_classifier - a classifier of the type that we will boost, e.g. BayesClassifier
+    #                   X - N x d matrix of N data points
+    #              labels - N vector of class labels
+    #                   T - number of boosting iterations
+    # out:    classifiers - (maximum) length T Python list of trained classifiers
+    #              alphas - (maximum) length T Python list of vote weights
+
     # these will come in handy later on
     Npts,Ndims = np.shape(X)
 
@@ -151,12 +161,13 @@ def trainBoost(base_classifier, X, labels, T=10):
         
     return classifiers, alphas
 
-# in:       X - N x d matrix of N data points
-# classifiers - (maximum) length T Python list of trained classifiers as above
-#      alphas - (maximum) length T Python list of vote weights
-#    Nclasses - the number of different classes
-# out:  yPred - N vector of class predictions for test points
+
 def classifyBoost(X, classifiers, alphas, Nclasses):
+    # in:       X - N x d matrix of N data points
+    # classifiers - (maximum) length T Python list of trained classifiers as above
+    #      alphas - (maximum) length T Python list of vote weights
+    #    Nclasses - the number of different classes
+    # out:  yPred - N vector of class predictions for test points
     Npts = X.shape[0]
     Ncomps = len(classifiers)
 
